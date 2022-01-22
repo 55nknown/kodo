@@ -384,14 +384,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "eframe_template"
-version = "0.1.0"
-dependencies = [
- "eframe",
- "serde",
-]
-
-[[package]]
 name = "egui"
 version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -654,6 +646,14 @@ name = "khronos_api"
 version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e2db585e1d738fc771bf08a151420d3ed193d9d895a36df7f6f8a9456b911ddc"
+
+[[package]]
+name = "kodo_editor"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "serde",
+]
 
 [[package]]
 name = "lazy-bytes-cast"
