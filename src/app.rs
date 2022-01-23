@@ -1,3 +1,7 @@
+use std::fs::{File, OpenOptions};
+use std::io::{Read, Write};
+use std::path::PathBuf;
+
 use eframe::egui::epaint::Shadow;
 use eframe::egui::{self, Color32, Stroke, TextEdit, TextStyle, Ui};
 use eframe::egui::{ScrollArea, Vec2};
@@ -8,12 +12,14 @@ use crate::{theme, tree};
 
 pub struct KodoApp {
     buffer: String,
+    open_file: Option<PathBuf>,
 }
 
 impl Default for KodoApp {
     fn default() -> Self {
         Self {
             buffer: String::from(""),
+            open_file: None,
         }
     }
 }
@@ -28,6 +34,26 @@ impl KodoApp {
             .max()
             .unwrap() as f32
             + col_width * 4_f32 // clearance
+    }
+
+    fn load_file(&mut self, path: PathBuf) {
+        if let Some(mut f) = match File::open(&path) {
+            Ok(f) => Some(f),
+            Err(err) => {
+                eprintln!("{err}");
+                None
+            }
+        } {
+            let mut buf = vec![];
+            f.read_to_end(&mut buf).unwrap();
+            match String::from_utf8(buf) {
+                Ok(str) => {
+                    self.buffer = str;
+                    self.open_file = Some(path);
+                }
+                Err(err) => eprintln!("{err}"),
+            };
+        }
     }
 }
 
@@ -62,33 +88,39 @@ impl epi::App for KodoApp {
             stroke: Stroke::none(),
         };
 
-        // egui::TopBottomPanel::top("top_panel")
-        //     .frame(top_frame)
-        //     .show(ctx, |ui| {
-        //         egui::menu::bar(ui, |ui| {
-        //             ui.spacing_mut().button_padding = Vec2::new(12.0, 6.0);
-        //             ui.menu_button("File", |ui| {
-        //                 ui.spacing_mut().button_padding = Vec2::new(12.0, 6.0);
-        //                 if ui.button("Open File...").clicked() {
-        //                     if let Ok(path) = FileDialog::new().show_open_single_file() {
-        //                         if let Some(path) = path {
-        //                             println!("{:?}", path);
-        //                         }
-        //                     }
-        //                     ui.close_menu();
-        //                 } else if ui.button("Open Folder...").clicked() {
-        //                     if let Ok(path) = FileDialog::new().show_open_single_dir() {
-        //                         if let Some(path) = path {
-        //                             println!("{:?}", path);
-        //                         }
-        //                     }
-        //                     ui.close_menu();
-        //                 } else if ui.button("Exit").clicked() {
-        //                     frame.quit();
-        //                 }
-        //             });
-        //         });
-        //     });
+        egui::TopBottomPanel::top("top_panel")
+            .frame(top_frame)
+            .show(ctx, |ui| {
+                egui::menu::bar(ui, |ui| {
+                    ui.spacing_mut().button_padding = Vec2::new(12.0, 6.0);
+                    ui.menu_button("File", |ui| {
+                        ui.spacing_mut().button_padding = Vec2::new(12.0, 6.0);
+                        if ui.button("Open File...").clicked() {
+                            if let Ok(path) = FileDialog::new().show_open_single_file() {
+                                if let Some(path) = path {
+                                    self.load_file(path);
+                                }
+                            }
+                            ui.close_menu();
+                        } else if ui.button("Open Folder...").clicked() {
+                            if let Ok(path) = FileDialog::new().show_open_single_dir() {
+                                if let Some(path) = path {
+                                    println!("{:?}", path);
+                                }
+                            }
+                            ui.close_menu();
+                        } else if ui.button("Save").clicked() {
+                            if let Some(path) = self.open_file.as_ref() {
+                                let mut file = OpenOptions::new().write(true).open(path).unwrap();
+                                file.write_all(self.buffer.as_bytes()).unwrap();
+                            }
+                            ui.close_menu();
+                        } else if ui.button("Exit").clicked() {
+                            frame.quit();
+                        }
+                    });
+                });
+            });
 
         let side_frame = egui::Frame {
             margin: Vec2::ZERO,
