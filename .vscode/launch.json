@@ -7,16 +7,16 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "Debug executable 'kodo_editor'",
+      "name": "Debug executable 'kodo'",
       "cargo": {
         "args": [
           "build",
-          "--bin=kodo_editor",
+          "--bin=kodo",
           "--lib=kodo_editor",
           "--package=kodo_editor",
         ],
         "filter": {
-          "name": "kodo_editor",
+          "name": "kodo",
           "kind": "bin",
         }
       },

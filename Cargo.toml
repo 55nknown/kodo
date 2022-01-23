@@ -10,14 +10,19 @@ rust-version = "1.56"
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[[bin]]
+name = "kodo"
+path = "src/main.rs"
+
 [dependencies]
 eframe = "0.16.0" # Gives us egui, epi and web+native backends
+syntect = { version = "4", default-features = false, features = [
+  "default-fancy",
+], optional = true }
+native-dialog = "0.6.1"
 
+enum-map = { version = "2", features = ["serde"] }
 serde = { version = "1", features = ["derive"], optional = true }
-
-[features]
-default = []
-persistence = ["eframe/persistence", "serde"] # Enable if you want to persist app state on shutdown
 
 [profile.release]
 opt-level = 2 # fast and small wasm

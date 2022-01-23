@@ -3,6 +3,9 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 mod app;
+mod syntax_highlighting;
+mod theme;
+mod tree;
 pub use app::KodoApp;
 
 // ----------------------------------------------------------------------------

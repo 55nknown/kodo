@@ -1,24 +1,33 @@
-use eframe::{egui, epi};
+use eframe::egui::epaint::Shadow;
+use eframe::egui::{self, Color32, Stroke, TextEdit, TextStyle, Ui};
+use eframe::egui::{ScrollArea, Vec2};
+use eframe::epi;
+use native_dialog::FileDialog;
 
-/// We derive Deserialize/Serialize so we can persist app state on shutdown.
-#[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
-#[cfg_attr(feature = "persistence", serde(default))] // if we add new fields, give them default values when deserializing old state
+use crate::{theme, tree};
+
 pub struct KodoApp {
-    // Example stuff:
-    label: String,
-
-    // this how you opt-out of serialization of a member
-    #[cfg_attr(feature = "persistence", serde(skip))]
-    value: f32,
+    buffer: String,
 }
 
 impl Default for KodoApp {
     fn default() -> Self {
         Self {
-            // Example stuff:
-            label: "Hello World!".to_owned(),
-            value: 2.7,
+            buffer: String::from(""),
         }
+    }
+}
+
+impl KodoApp {
+    fn max_text_width(&self, ui: &Ui) -> f32 {
+        let text_style = TextStyle::Monospace;
+        let col_width = ui.fonts()[text_style].glyph_width('0');
+        self.buffer
+            .split("\n")
+            .map(|line| col_width as usize * line.len())
+            .max()
+            .unwrap() as f32
+            + col_width * 4_f32 // clearance
     }
 }
 
@@ -27,92 +36,130 @@ impl epi::App for KodoApp {
         "Kodo"
     }
 
+    fn clear_color(&self) -> egui::Rgba {
+        egui::Color32::TRANSPARENT.into()
+    }
+
     /// Called once before the first frame.
     fn setup(
         &mut self,
-        _ctx: &egui::CtxRef,
+        ctx: &egui::CtxRef,
         _frame: &epi::Frame,
         _storage: Option<&dyn epi::Storage>,
     ) {
-        // Load previous app state (if any).
-        // Note that you must enable the `persistence` feature for this to work.
-        #[cfg(feature = "persistence")]
-        if let Some(storage) = _storage {
-            *self = epi::get_value(storage, epi::APP_KEY).unwrap_or_default()
-        }
+        ctx.set_visuals(theme::dark());
     }
 
-    /// Called by the frame work to save state before shutdown.
-    /// Note that you must enable the `persistence` feature for this to work.
-    #[cfg(feature = "persistence")]
-    fn save(&mut self, storage: &mut dyn epi::Storage) {
-        epi::set_value(storage, epi::APP_KEY, self);
-    }
-
-    /// Called each time the UI needs repainting, which may be many times per second.
-    /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::CtxRef, frame: &epi::Frame) {
-        let Self { label, value } = self;
+        let top_frame = egui::Frame {
+            margin: Vec2::ZERO,
+            corner_radius: 0.0,
+            shadow: Shadow {
+                extrusion: 0.0,
+                color: Color32::TRANSPARENT,
+            },
+            fill: theme::Color(theme::BACKGROUND),
+            stroke: Stroke::none(),
+        };
 
-        // Examples of how to create different panels and windows.
-        // Pick whichever suits you.
-        // Tip: a good default choice is to just keep the `CentralPanel`.
-        // For inspiration and more examples, go to https://emilk.github.io/egui
+        // egui::TopBottomPanel::top("top_panel")
+        //     .frame(top_frame)
+        //     .show(ctx, |ui| {
+        //         egui::menu::bar(ui, |ui| {
+        //             ui.spacing_mut().button_padding = Vec2::new(12.0, 6.0);
+        //             ui.menu_button("File", |ui| {
+        //                 ui.spacing_mut().button_padding = Vec2::new(12.0, 6.0);
+        //                 if ui.button("Open File...").clicked() {
+        //                     if let Ok(path) = FileDialog::new().show_open_single_file() {
+        //                         if let Some(path) = path {
+        //                             println!("{:?}", path);
+        //                         }
+        //                     }
+        //                     ui.close_menu();
+        //                 } else if ui.button("Open Folder...").clicked() {
+        //                     if let Ok(path) = FileDialog::new().show_open_single_dir() {
+        //                         if let Some(path) = path {
+        //                             println!("{:?}", path);
+        //                         }
+        //                     }
+        //                     ui.close_menu();
+        //                 } else if ui.button("Exit").clicked() {
+        //                     frame.quit();
+        //                 }
+        //             });
+        //         });
+        //     });
 
-        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            // The top panel is often a good place for a menu bar:
-            egui::menu::bar(ui, |ui| {
-                ui.menu_button("File", |ui| {
-                    if ui.button("Quit").clicked() {
-                        frame.quit();
-                    }
-                });
+        let side_frame = egui::Frame {
+            margin: Vec2::ZERO,
+            corner_radius: 0.0,
+            shadow: Shadow {
+                extrusion: 0.0,
+                color: Color32::TRANSPARENT,
+            },
+            fill: theme::Color(theme::BACKGROUND),
+            stroke: Stroke::none(),
+        };
+
+        egui::SidePanel::left("explorer")
+            .frame(side_frame)
+            .resizable(true)
+            .min_width(100.0)
+            .max_width(500.0)
+            .show(ctx, |ui| {
+                tree::Tree::demo().ui(ui);
             });
-        });
 
-        egui::SidePanel::left("side_panel").show(ctx, |ui| {
-            ui.heading("Side Panel");
+        let main_frame = egui::Frame {
+            margin: Vec2::ZERO,
+            corner_radius: 0.0,
+            shadow: Shadow {
+                extrusion: 0.0,
+                color: Color32::TRANSPARENT,
+            },
+            fill: theme::Color(theme::BACKGROUND & 0xBBFFFFFF),
+            stroke: Stroke::none(),
+        };
+        egui::CentralPanel::default()
+            .frame(main_frame)
+            .show(ctx, |ui| {
+                ui.spacing_mut().item_spacing = Vec2::new(4.0, 4.0);
 
-            ui.horizontal(|ui| {
-                ui.label("Write something: ");
-                ui.text_edit_singleline(label);
+                ScrollArea::both()
+                    .always_show_scroll(true)
+                    .stick_to_bottom()
+                    .show_viewport(ui, |ui, _viewport| {
+                        ui.set_min_width(self.max_text_width(ui));
+                        ui.style_mut().visuals.widgets.hovered.bg_stroke =
+                            Stroke::new(0.0, Color32::RED);
+                        ui.style_mut().visuals.widgets.active.bg_stroke =
+                            Stroke::new(0.0, Color32::RED);
+                        ui.style_mut().visuals.widgets.inactive.bg_stroke =
+                            Stroke::new(0.0, Color32::RED);
+                        ui.style_mut().visuals.widgets.active.corner_radius = 0.0;
+
+                        let theme = crate::syntax_highlighting::CodeTheme::from_memory(ui.ctx());
+
+                        let mut layouter = |ui: &egui::Ui, string: &str, wrap_width: f32| {
+                            let mut layout_job = crate::syntax_highlighting::highlight(
+                                ui.ctx(),
+                                &theme,
+                                string,
+                                "rs",
+                            );
+                            layout_job.wrap_width = wrap_width;
+                            ui.fonts().layout_job(layout_job)
+                        };
+
+                        ui.add(
+                            TextEdit::multiline(&mut self.buffer)
+                                .text_style(egui::TextStyle::Monospace) // for cursor height
+                                .code_editor()
+                                .desired_width(f32::INFINITY)
+                                .lock_focus(true)
+                                .layouter(&mut layouter),
+                        );
+                    });
             });
-
-            ui.add(egui::Slider::new(value, 0.0..=10.0).text("value"));
-            if ui.button("Increment").clicked() {
-                *value += 1.0;
-            }
-
-            ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
-                ui.horizontal(|ui| {
-                    ui.spacing_mut().item_spacing.x = 0.0;
-                    ui.label("powered by ");
-                    ui.hyperlink_to("egui", "https://github.com/emilk/egui");
-                    ui.label(" and ");
-                    ui.hyperlink_to("eframe", "https://github.com/emilk/egui/tree/master/eframe");
-                });
-            });
-        });
-
-        egui::CentralPanel::default().show(ctx, |ui| {
-            // The central panel the region left after adding TopPanel's and SidePanel's
-
-            ui.heading("eframe template");
-            ui.hyperlink("https://github.com/emilk/eframe_template");
-            ui.add(egui::github_link_file!(
-                "https://github.com/emilk/eframe_template/blob/master/",
-                "Source code."
-            ));
-            egui::warn_if_debug_build(ui);
-        });
-
-        if false {
-            egui::Window::new("Window").show(ctx, |ui| {
-                ui.label("Windows can be moved by dragging them.");
-                ui.label("They are automatically sized based on contents.");
-                ui.label("You can turn on resizing and scrolling if you like.");
-                ui.label("You would normally chose either panels OR windows.");
-            });
-        }
     }
 }
