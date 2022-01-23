@@ -29,7 +29,7 @@ impl KodoApp {
         let text_style = TextStyle::Monospace;
         let col_width = ui.fonts()[text_style].glyph_width('0');
         self.buffer
-            .split("\n")
+            .split('\n')
             .map(|line| col_width as usize * line.len())
             .max()
             .unwrap() as f32
@@ -96,17 +96,13 @@ impl epi::App for KodoApp {
                     ui.menu_button("File", |ui| {
                         ui.spacing_mut().button_padding = Vec2::new(12.0, 6.0);
                         if ui.button("Open File...").clicked() {
-                            if let Ok(path) = FileDialog::new().show_open_single_file() {
-                                if let Some(path) = path {
-                                    self.load_file(path);
-                                }
+                            if let Ok(Some(path)) = FileDialog::new().show_open_single_file() {
+                                self.load_file(path);
                             }
                             ui.close_menu();
                         } else if ui.button("Open Folder...").clicked() {
-                            if let Ok(path) = FileDialog::new().show_open_single_dir() {
-                                if let Some(path) = path {
-                                    println!("{:?}", path);
-                                }
+                            if let Ok(Some(path)) = FileDialog::new().show_open_single_dir() {
+                                println!("{:?}", path);
                             }
                             ui.close_menu();
                         } else if ui.button("Save").clicked() {

@@ -23,7 +23,7 @@ enum ColorByte {
 
 pub fn Color(color: u32) -> Color32 {
     fn get_byte(n: u32, byte: ColorByte) -> u8 {
-        (n >> byte as u8 * 8 & 0xff) as u8
+        (n >> (byte as u8 * 8) & 0xff) as u8
     }
 
     let r = get_byte(color, ColorByte::Red);

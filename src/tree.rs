@@ -44,14 +44,14 @@ impl SubTree {
             .0
             .into_iter()
             .enumerate()
-            .filter_map(|(i, mut tree)| {
+            .map(|(i, mut tree)| {
                 tree.ui(
                     ui,
                     depth + 1,
                     &format!("{}/{}", parent_name, i),
                     selected_name,
                 );
-                Some(tree)
+                tree
             })
             .collect();
     }
