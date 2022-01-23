@@ -143,7 +143,7 @@ impl epi::App for KodoApp {
             corner_radius: 0.0,
             shadow: Shadow {
                 extrusion: 0.0,
-                color: Color32::TRANSPARENT,
+                color: theme::Color(0xFF161B22),
             },
             fill: theme::Color(theme::BACKGROUND & 0xBBFFFFFF),
             stroke: Stroke::none(),
@@ -153,7 +153,10 @@ impl epi::App for KodoApp {
             .show(ctx, |ui| {
                 ui.spacing_mut().item_spacing = Vec2::new(4.0, 4.0);
 
+                ctx.input().raw.ui(ui);
+
                 ScrollArea::both()
+                    .auto_shrink([false, false])
                     .always_show_scroll(true)
                     .stick_to_bottom()
                     .show_viewport(ui, |ui, _viewport| {
