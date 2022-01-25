@@ -8,11 +8,12 @@ use eframe::egui::{ScrollArea, Vec2};
 use eframe::epi;
 use native_dialog::FileDialog;
 
-use crate::{theme, tree};
+use crate::{theme, ui::*};
 
 pub struct KodoApp {
     buffer: String,
     open_file: Option<PathBuf>,
+    open_folder: Option<PathBuf>,
 }
 
 impl Default for KodoApp {
@@ -20,6 +21,7 @@ impl Default for KodoApp {
         Self {
             buffer: String::from(""),
             open_file: None,
+            open_folder: None,
         }
     }
 }
@@ -102,7 +104,7 @@ impl epi::App for KodoApp {
                             ui.close_menu();
                         } else if ui.button("Open Folder...").clicked() {
                             if let Ok(Some(path)) = FileDialog::new().show_open_single_dir() {
-                                println!("{:?}", path);
+                                self.open_folder = Some(path);
                             }
                             ui.close_menu();
                         } else if ui.button("Save").clicked() {
@@ -135,7 +137,11 @@ impl epi::App for KodoApp {
             .min_width(100.0)
             .max_width(500.0)
             .show(ctx, |ui| {
-                tree::Tree::demo().ui(ui);
+                if let Some(root) = self.open_folder.as_ref() {
+                    if root.is_dir() {
+                        tree::Tree::new(root).ui(ui);
+                    }
+                }
             });
 
         let main_frame = egui::Frame {
@@ -152,8 +158,6 @@ impl epi::App for KodoApp {
             .frame(main_frame)
             .show(ctx, |ui| {
                 ui.spacing_mut().item_spacing = Vec2::new(4.0, 4.0);
-
-                ctx.input().raw.ui(ui);
 
                 ScrollArea::both()
                     .auto_shrink([false, false])

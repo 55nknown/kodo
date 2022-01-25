@@ -5,7 +5,7 @@
 mod app;
 mod syntax_highlighting;
 mod theme;
-mod tree;
+mod ui;
 pub use app::KodoApp;
 
 // ----------------------------------------------------------------------------
