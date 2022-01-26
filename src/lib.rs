@@ -2,10 +2,8 @@
 #![cfg_attr(not(debug_assertions), deny(warnings))] // Forbid warnings in release builds
 #![warn(clippy::all, rust_2018_idioms)]
 
-mod app;
-mod syntax_highlighting;
-mod theme;
 mod ui;
+mod app;
 pub use app::KodoApp;
 
 // ----------------------------------------------------------------------------

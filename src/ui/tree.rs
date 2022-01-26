@@ -1,5 +1,6 @@
 use eframe::egui::{CollapsingHeader, Ui};
 use std::{
+    cmp::Ordering,
     path::{Path, PathBuf},
     vec,
 };
@@ -19,8 +20,8 @@ impl Tree {
         }
     }
 
-    pub fn ui(&mut self, ui: &mut Ui) {
-        self.subtree.ui(ui, 0, &mut self.selected);
+    pub fn ui(&mut self, ui: &mut Ui) -> Option<PathBuf> {
+        self.subtree.ui(ui, 0, &mut self.selected)
     }
 }
 
@@ -39,6 +40,18 @@ impl SubTree {
         }
     }
 
+    fn sort(children: &mut Vec<SubTree>) {
+        children.sort_by(|a, b| {
+            if a.parent.is_dir() && b.parent.is_file() {
+                Ordering::Less
+            } else if b.parent.is_dir() && a.parent.is_file() {
+                Ordering::Greater
+            } else {
+                a.get_name().cmp(&b.get_name())
+            }
+        });
+    }
+
     fn build(parent: &Path) -> Vec<SubTree> {
         let mut children = vec![];
 
@@ -53,6 +66,8 @@ impl SubTree {
             }
         }
 
+        Self::sort(&mut children);
+
         children
     }
 
@@ -65,20 +80,39 @@ impl SubTree {
             .unwrap_or_default()
     }
 
-    pub fn ui(&mut self, ui: &mut Ui, depth: usize, selected: &mut PathBuf) {
-        let response = CollapsingHeader::new(self.get_name())
-            .default_open(depth < 1)
-            .selectable(true)
-            .selected(self.parent == *selected)
-            .show(ui, |ui| self.children_ui(ui, depth, selected));
-        if response.header_response.clicked() {
-            *selected = self.parent.clone();
+    pub fn ui(&mut self, ui: &mut Ui, depth: usize, selected: &mut PathBuf) -> Option<PathBuf> {
+        if self.parent.is_dir() {
+            let response = CollapsingHeader::new(self.get_name())
+                .default_open(depth < 1)
+                .selectable(true)
+                .selected(self.parent == *selected)
+                .show(ui, |ui| return self.children_ui(ui, depth, selected));
+            if response.header_response.clicked() {
+                *selected = self.parent.clone();
+            }
+            return response.body_returned.flatten();
+        } else if self.parent.is_file() {
+            if ui.button(self.get_name()).clicked() {
+                *selected = self.parent.clone();
+                return Some(self.parent.clone());
+            }
         }
+
+        None
     }
 
-    fn children_ui(&mut self, ui: &mut Ui, depth: usize, selected: &mut PathBuf) {
-        self.children.iter_mut().for_each(|tree| {
-            tree.ui(ui, depth + 1, selected);
-        });
+    fn children_ui(
+        &mut self,
+        ui: &mut Ui,
+        depth: usize,
+        selected: &mut PathBuf,
+    ) -> Option<PathBuf> {
+        for tree in &mut self.children {
+            if let Some(opened) = tree.ui(ui, depth + 1, selected) {
+                return Some(opened);
+            }
+        }
+
+        None
     }
 }

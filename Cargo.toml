@@ -20,6 +20,7 @@ syntect = { version = "4", default-features = false, features = [
   "default-fancy",
 ], optional = true }
 native-dialog = "0.6.1"
+image = "0.23.14"
 
 enum-map = { version = "2", features = ["serde"] }
 serde = { version = "1", features = ["derive"], optional = true }
