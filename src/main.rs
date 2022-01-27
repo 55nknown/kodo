@@ -37,7 +37,7 @@ fn main() {
         icon_data: load_icon(Path::new("assets/kodo_icon_circle.png")),
         initial_window_size: None,
         resizable: true,
-        transparent: true,
+        transparent: false,
     };
     eframe::run_native(Box::new(app), native_options);
 }

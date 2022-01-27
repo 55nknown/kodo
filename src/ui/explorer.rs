@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use eframe::egui::epaint::Shadow;
-use eframe::egui::{self, Color32, CtxRef, Vec2};
+use eframe::egui::{self, Color32, Context, Vec2};
 use eframe::egui::{ScrollArea, Stroke};
 
 use super::tree::Tree;
@@ -12,7 +12,7 @@ pub struct Explorer {
 }
 
 impl Explorer {
-    pub fn show(&mut self, ctx: &CtxRef) -> ExplorerResponse {
+    pub fn show(&mut self, ctx: &Context) -> ExplorerResponse {
         let side_frame = egui::Frame {
             margin: Vec2::ZERO,
             corner_radius: 0.0,
@@ -21,13 +21,14 @@ impl Explorer {
                 color: Color32::TRANSPARENT,
             },
             fill: Color32::BLACK,
-            stroke: Stroke::none(),
+            stroke: Stroke::default(),
         };
         egui::SidePanel::left("explorer")
             .frame(side_frame)
-            .resizable(true)
+            .default_width(500.0)
             .min_width(200.0)
             .max_width(500.0)
+            .resizable(true)
             .show(ctx, |ui| {
                 if let Some(tree) = self.tree.as_mut() {
                     ScrollArea::vertical()
