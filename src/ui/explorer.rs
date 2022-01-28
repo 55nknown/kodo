@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::path::{Path, PathBuf};
 
 use eframe::egui::epaint::Shadow;
@@ -33,7 +34,7 @@ impl Explorer {
                 if let Some(tree) = self.tree.as_mut() {
                     ScrollArea::vertical()
                         .auto_shrink([false, false])
-                        .show(ui, |ui| return ExplorerResponse::new(tree.ui(ui)));
+                        .show(ui, |ui| ExplorerResponse::new(tree.ui(ui)));
                 }
             });
         ExplorerResponse::new(None)

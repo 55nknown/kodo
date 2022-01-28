@@ -1,7 +1,6 @@
 // >/<
 
-use std::sync::Arc;
-
+#![allow(dead_code)]
 use eframe::egui::CentralPanel;
 use eframe::egui::*;
 use eframe::epi;

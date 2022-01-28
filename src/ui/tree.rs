@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use eframe::egui::{CollapsingHeader, Ui};
 use std::{
     cmp::Ordering,
@@ -86,7 +87,7 @@ impl SubTree {
                 .default_open(depth < 1)
                 .selectable(true)
                 .selected(self.parent == *selected)
-                .show(ui, |ui| return self.children_ui(ui, depth, selected));
+                .show(ui, |ui| self.children_ui(ui, depth, selected));
             if response.header_response.clicked() {
                 *selected = self.parent.clone();
             }
