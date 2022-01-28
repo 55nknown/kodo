@@ -28,6 +28,8 @@ fn load_icon(path: &Path) -> Option<eframe::epi::IconData> {
 // When compiling natively:
 #[cfg(not(target_arch = "wasm32"))]
 fn main() {
+    use eframe::egui::Vec2;
+
     let app = kodo_editor::KodoApp::default();
     let native_options = eframe::NativeOptions {
         always_on_top: false,
@@ -36,6 +38,8 @@ fn main() {
         drag_and_drop_support: true,
         icon_data: load_icon(Path::new("assets/kodo_icon_circle.png")),
         initial_window_size: None,
+        min_window_size: Some(Vec2::new(600.0, 400.0)),
+        max_window_size: None,
         resizable: true,
         transparent: false,
     };
